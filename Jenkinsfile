@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    environment {
+        NEXUS_VERSION = "nexus3"
+        NEXUS_PROTOCOL = "http"
+        NEXUS_URL = "nexus:8081"
+        NEXUS_REPOSITORY = "maven-releases"
+        NEXUS_CREDENTIAL_ID = "nexus-credentials"
+        DOCKER_IMAGE = "my-app:latest"
+        KUBECONFIG_ID = "kubeconfig"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/hcharfeddine/tpFoyer.git'
+            }
+        }
+
+        stage('Compile') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
+        stage('Deploy to Nexus') {
+            steps {
+                script {
+                    nexusArtifactUploader(
+                        nexusVersion: NEXUS_VERSION,
+                        protocol: NEXUS_PROTOCOL,
+                        nexusUrl: NEXUS_URL,
+                        groupId: 'com.example',
+                        version: '0.0.1-SNAPSHOT',
+                        repository: NEXUS_REPOSITORY,
+                        credentialsId: NEXUS_CREDENTIAL_ID,
+                        artifacts: [
+                            [artifactId: 'demo', classifier: '', file: 'target/demo-0.0.1-SNAPSHOT.jar', type: 'jar']
+                        ]
+                    )
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}")
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withKubeConfig([credentialsId: KUBECONFIG_ID]) {
+                    sh 'kubectl apply -f k8s/deployment.yaml'
+                    sh 'kubectl apply -f k8s/service.yaml'
+                }
+            }
+        }
+    }
+}

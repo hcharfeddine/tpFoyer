@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops_db
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: devops_db
+  template:
+    metadata:
+      labels:
+        app: devops_db
+    spec:
+      containers:
+      - name: devops_db
+        image: my-app:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://mysql:3306/devops_db
+        - name: SPRING_DATASOURCE_USERNAME
+          value: root
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops_db
+spec:
+  type: NodePort
+  selector:
+    app: devops_db
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
