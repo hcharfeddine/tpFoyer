@@ -1,11 +1,12 @@
-pipeline {
+pipeline { 
     agent any
 
     environment {
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "127.0.0.1:8081"
-        NEXUS_REPOSITORY = "maven-releases"
+        NEXUS_SNAPSHOT_REPO = "nexus-snapshots"
+        NEXUS_RELEASE_REPO = "maven-releases"
         NEXUS_CREDENTIAL_ID = "nexus-credentials"
         DOCKER_IMAGE = "my-app:latest"
         KUBECONFIG_ID = "kubeconfig"
@@ -21,7 +22,6 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    // Skip git checkout if the directory is already a git repo (like in Replit)
                     if (!fileExists('.git')) {
                         git branch: 'main', url: 'https://github.com/hcharfeddine/tpFoyer.git'
                     }
@@ -59,25 +59,34 @@ pipeline {
         }
 
         stage('Deploy to Nexus') {
-    steps {
-        script {
-            def repo = '0.0.1-SNAPSHOT'.endsWith('-SNAPSHOT') ? 'nexus-snapshots' : 'maven-releases'
-            
-            nexusArtifactUploader(
-                nexusVersion: NEXUS_VERSION,
-                protocol: NEXUS_PROTOCOL,
-                nexusUrl: NEXUS_URL,
-                groupId: 'tn.esprit',
-                version: '0.0.1-SNAPSHOT',
-                repository: repo,
-                credentialsId: NEXUS_CREDENTIAL_ID,
-                artifacts: [
-                    [artifactId: 'tpFoyer-17', classifier: '', file: 'target/tpFoyer-17-0.0.1-SNAPSHOT.jar', type: 'jar']
-                ]
-            )
+            steps {
+                script {
+                    // Determine correct repository for snapshot or release
+                    def version = readMavenPom().getVersion()
+                    def repository = version.endsWith('-SNAPSHOT') ? NEXUS_SNAPSHOT_REPO : NEXUS_RELEASE_REPO
+                    def artifactFile = "target/tpFoyer-17-${version}.jar"
+
+                    // Check artifact exists
+                    if (!fileExists(artifactFile)) {
+                        error "Artifact ${artifactFile} not found! Make sure Maven package succeeded."
+                    }
+
+                    // Upload to Nexus
+                    nexusArtifactUploader(
+                        nexusVersion: NEXUS_VERSION,
+                        protocol: NEXUS_PROTOCOL,
+                        nexusUrl: NEXUS_URL,
+                        groupId: 'tn.esprit',
+                        version: version,
+                        repository: repository,
+                        credentialsId: NEXUS_CREDENTIAL_ID,
+                        artifacts: [
+                            [artifactId: 'tpFoyer-17', classifier: '', file: artifactFile, type: 'jar']
+                        ]
+                    )
+                }
+            }
         }
-    }
-}
 
         stage('Docker Build') {
             steps {
@@ -106,5 +115,5 @@ pipeline {
             }
         }
 
-    } 
-} 
+    }
+}
