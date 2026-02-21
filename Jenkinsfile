@@ -1,12 +1,11 @@
-pipeline { 
+pipeline {
     agent any
 
     environment {
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "127.0.0.1:8081"
-        NEXUS_SNAPSHOT_REPO = "nexus-snapshots"
-        NEXUS_RELEASE_REPO = "maven-releases"
+        NEXUS_REPOSITORY = "maven-releases"
         NEXUS_CREDENTIAL_ID = "nexus-credentials"
         DOCKER_IMAGE = "my-app:latest"
         KUBECONFIG_ID = "kubeconfig"
@@ -22,6 +21,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
+                    // Skip git checkout if the directory is already a git repo (like in Replit)
                     if (!fileExists('.git')) {
                         git branch: 'main', url: 'https://github.com/hcharfeddine/tpFoyer.git'
                     }
@@ -58,35 +58,24 @@ pipeline {
             }
         }
 
-       stage('Deploy to Nexus') {
-    steps {
-        script {
-            def pom = readMavenPom()
-            def version = pom.getVersion()
-            def artifactFile = "target/tpFoyer-17-${version}.jar"
-            
-            if (!fileExists(artifactFile)) {
-                error "Artifact ${artifactFile} not found!"
+        stage('Deploy to Nexus') {
+            steps {
+                script {
+                    nexusArtifactUploader(
+                        nexusVersion: NEXUS_VERSION,
+                        protocol: NEXUS_PROTOCOL,
+                        nexusUrl: NEXUS_URL,
+                        groupId: 'tn.esprit',
+                        version: '0.0.1-SNAPSHOT',
+                        repository: NEXUS_REPOSITORY,
+                        credentialsId: NEXUS_CREDENTIAL_ID,
+                        artifacts: [
+                            [artifactId: 'tpFoyer-17', classifier: '', file: 'target/tpFoyer-17-0.0.1-SNAPSHOT.jar', type: 'jar']
+                        ]
+                    )
+                }
             }
-
-            // Choose repository
-            def repository = version.endsWith('-SNAPSHOT') ? NEXUS_SNAPSHOT_REPO : NEXUS_RELEASE_REPO
-
-            nexusArtifactUploader(
-                nexusVersion: NEXUS_VERSION,
-                protocol: NEXUS_PROTOCOL,
-                nexusUrl: NEXUS_URL,
-                groupId: 'tn.esprit',
-                version: version,
-                repository: repository,
-                credentialsId: NEXUS_CREDENTIAL_ID,
-                artifacts: [
-                    [artifactId: 'tpFoyer-17', classifier: '', file: artifactFile, type: 'jar']
-                ]
-            )
         }
-    }
-}
 
         stage('Docker Build') {
             steps {
@@ -115,5 +104,5 @@ pipeline {
             }
         }
 
-    }
-}
+    } 
+} 
