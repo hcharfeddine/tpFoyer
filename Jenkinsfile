@@ -1,11 +1,9 @@
 pipeline {
     agent any
-    tools {
-        jdk 'JDK 17'
-        maven 'Maven_3.8.6'
-    }
 
     environment {
+        JAVA_HOME = '/opt/java/openjdk'  // set your JDK path
+        PATH = "/usr/share/maven/bin:/opt/java/openjdk/bin:${env.PATH}"  // Maven + Java
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "127.0.0.1:8081"
@@ -22,20 +20,10 @@ pipeline {
             }
         }
 
-        stage('Setup Tools') {
-            steps {
-                script {
-                    // Get the paths for Maven and JDK
-                    def mvnHome = tool name: 'Maven_3.8.6', type: 'maven'
-                    def javaHome = tool name: 'JDK 17', type: 'jdk'
-                    // Prepend to PATH so all sh steps can find mvn and java
-                    env.PATH = "${mvnHome}/bin:${javaHome}/bin:${env.PATH}"
-                }
-            }
-        }
-
         stage('Compile') {
             steps {
+                sh 'java -version'
+                sh 'mvn -version'
                 sh 'mvn clean compile'
             }
         }
