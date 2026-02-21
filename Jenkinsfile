@@ -1,5 +1,10 @@
 pipeline {
     agent any
+    tools {
+    jdk 'JDK 17'
+    maven 'Maven_3.9.9'
+}
+
 
     environment {
         JAVA_HOME = '/opt/java/openjdk'  // set your JDK path
