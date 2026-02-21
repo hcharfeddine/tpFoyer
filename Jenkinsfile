@@ -95,8 +95,10 @@ EOF
         stage('Docker Build') {
             steps {
                 script {
-                    // Construire l'image avec le tag du registre local
-                    dockerImage = docker.build("${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE}:${env.DOCKER_TAG}")
+                    // Utiliser les commandes shell Docker directement
+                    sh """
+                        docker build -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    """
                 }
             }
         }
@@ -104,13 +106,10 @@ EOF
         stage('Docker Push') {
             steps {
                 script {
-                    // Pousser vers le registre local (pas besoin de credentials si non sécurisé)
-                    dockerImage.push()
-                    
-                    // OU si votre registre local nécessite une authentification :
-                    // docker.withRegistry("http://${env.DOCKER_REGISTRY}", 'local-registry-credentials') {
-                    //     dockerImage.push()
-                    // }
+                    // Pousser l'image vers le registre local
+                    sh """
+                        docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                    """
                 }
             }
         }
