@@ -36,7 +36,6 @@ pipeline {
 
         stage('Compile') {
             steps {
-                sh 'mvn -version'
                 sh 'mvn clean compile'
             }
         }
