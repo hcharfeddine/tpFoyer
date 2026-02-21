@@ -96,7 +96,7 @@ EOF
             steps {
                 script {
                     // Construire l'image avec le tag du registre local
-                    dockerImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    dockerImage = docker.build("${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE}:${env.DOCKER_TAG}")
                 }
             }
         }
@@ -108,7 +108,7 @@ EOF
                     dockerImage.push()
                     
                     // OU si votre registre local nécessite une authentification :
-                    // docker.withRegistry("http://${DOCKER_REGISTRY}", 'local-registry-credentials') {
+                    // docker.withRegistry("http://${env.DOCKER_REGISTRY}", 'local-registry-credentials') {
                     //     dockerImage.push()
                     // }
                 }
