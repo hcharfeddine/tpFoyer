@@ -58,35 +58,35 @@ pipeline {
             }
         }
 
-        stage('Deploy to Nexus') {
-            steps {
-                script {
-                    // Determine correct repository for snapshot or release
-                    def version = readMavenPom().getVersion()
-                    def repository = version.endsWith('-SNAPSHOT') ? NEXUS_SNAPSHOT_REPO : NEXUS_RELEASE_REPO
-                    def artifactFile = "target/tpFoyer-17-${version}.jar"
-
-                    // Check artifact exists
-                    if (!fileExists(artifactFile)) {
-                        error "Artifact ${artifactFile} not found! Make sure Maven package succeeded."
-                    }
-
-                    // Upload to Nexus
-                    nexusArtifactUploader(
-                        nexusVersion: NEXUS_VERSION,
-                        protocol: NEXUS_PROTOCOL,
-                        nexusUrl: NEXUS_URL,
-                        groupId: 'tn.esprit',
-                        version: version,
-                        repository: repository,
-                        credentialsId: NEXUS_CREDENTIAL_ID,
-                        artifacts: [
-                            [artifactId: 'tpFoyer-17', classifier: '', file: artifactFile, type: 'jar']
-                        ]
-                    )
-                }
+       stage('Deploy to Nexus') {
+    steps {
+        script {
+            def pom = readMavenPom()
+            def version = pom.getVersion()
+            def artifactFile = "target/tpFoyer-17-${version}.jar"
+            
+            if (!fileExists(artifactFile)) {
+                error "Artifact ${artifactFile} not found!"
             }
+
+            // Choose repository
+            def repository = version.endsWith('-SNAPSHOT') ? NEXUS_SNAPSHOT_REPO : NEXUS_RELEASE_REPO
+
+            nexusArtifactUploader(
+                nexusVersion: NEXUS_VERSION,
+                protocol: NEXUS_PROTOCOL,
+                nexusUrl: NEXUS_URL,
+                groupId: 'tn.esprit',
+                version: version,
+                repository: repository,
+                credentialsId: NEXUS_CREDENTIAL_ID,
+                artifacts: [
+                    [artifactId: 'tpFoyer-17', classifier: '', file: artifactFile, type: 'jar']
+                ]
+            )
         }
+    }
+}
 
         stage('Docker Build') {
             steps {
