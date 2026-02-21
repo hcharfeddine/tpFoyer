@@ -23,10 +23,16 @@ pipeline {
         }
 
         stage('Compile') {
-            steps {
-                sh 'mvn clean compile'
-            }
+    steps {
+        script {
+            def mvnHome = tool name: 'Maven_3.8.6', type: 'maven'
+            def javaHome = tool name: 'JDK 17', type: 'jdk'
+            env.PATH = "${mvnHome}/bin:${javaHome}/bin:${env.PATH}"
         }
+        sh 'mvn -version'
+        sh 'mvn clean compile'
+    }
+}
 
         stage('SonarQube Analysis') {
             steps {
