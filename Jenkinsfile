@@ -95,7 +95,8 @@ EOF
         stage('Docker Build') {
             steps {
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}")
+                    // Construire l'image avec le tag du registre local
+                    dockerImage = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
                 }
             }
         }
@@ -103,9 +104,13 @@ EOF
         stage('Docker Push') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
-                        dockerImage.push()
-                    }
+                    // Pousser vers le registre local (pas besoin de credentials si non sécurisé)
+                    dockerImage.push()
+                    
+                    // OU si votre registre local nécessite une authentification :
+                    // docker.withRegistry("http://${DOCKER_REGISTRY}", 'local-registry-credentials') {
+                    //     dockerImage.push()
+                    // }
                 }
             }
         }
