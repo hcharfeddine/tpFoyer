@@ -10,6 +10,10 @@ pipeline {
         DOCKER_IMAGE = "my-app:latest"
         KUBECONFIG_ID = "kubeconfig"
     }
+    tools {
+    maven 'Maven 3.8.6'
+    jdk 'JDK 17'
+}
 
     
 
