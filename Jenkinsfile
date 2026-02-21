@@ -59,23 +59,23 @@ pipeline {
         }
 
         stage('Deploy to Nexus') {
-            steps {
-                script {
-                    nexusArtifactUploader(
-                        nexusVersion: NEXUS_VERSION,
-                        protocol: NEXUS_PROTOCOL,
-                        nexusUrl: NEXUS_URL,
-                        groupId: 'tn.esprit',
-                        version: '0.0.1-SNAPSHOT',
-                        repository: NEXUS_REPOSITORY,
-                        credentialsId: NEXUS_CREDENTIAL_ID,
-                        artifacts: [
-                            [artifactId: 'tpFoyer-17', classifier: '', file: 'target/tpFoyer-17-0.0.1-SNAPSHOT.jar', type: 'jar']
-                        ]
-                    )
-                }
-            }
+    steps {
+        script {
+            nexusArtifactUploader(
+                nexusVersion: NEXUS_VERSION,
+                protocol: NEXUS_PROTOCOL,
+                nexusUrl: NEXUS_URL,
+                groupId: 'tn.esprit',
+                version: '0.0.1-SNAPSHOT',
+                repository: 'nexus-snapshots', // <--- use snapshot repo
+                credentialsId: NEXUS_CREDENTIAL_ID,
+                artifacts: [
+                    [artifactId: 'tpFoyer-17', classifier: '', file: 'target/tpFoyer-17-0.0.1-SNAPSHOT.jar', type: 'jar']
+                ]
+            )
         }
+    }
+}
 
         stage('Docker Build') {
             steps {
