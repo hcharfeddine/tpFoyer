@@ -61,13 +61,15 @@ pipeline {
         stage('Deploy to Nexus') {
     steps {
         script {
+            def repo = '0.0.1-SNAPSHOT'.endsWith('-SNAPSHOT') ? 'nexus-snapshots' : 'maven-releases'
+            
             nexusArtifactUploader(
                 nexusVersion: NEXUS_VERSION,
                 protocol: NEXUS_PROTOCOL,
                 nexusUrl: NEXUS_URL,
                 groupId: 'tn.esprit',
                 version: '0.0.1-SNAPSHOT',
-                repository: 'nexus-snapshots', // <--- use snapshot repo
+                repository: repo,
                 credentialsId: NEXUS_CREDENTIAL_ID,
                 artifacts: [
                     [artifactId: 'tpFoyer-17', classifier: '', file: 'target/tpFoyer-17-0.0.1-SNAPSHOT.jar', type: 'jar']
