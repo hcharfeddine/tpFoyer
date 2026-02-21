@@ -1,16 +1,7 @@
 pipeline {
     agent any
-    tools {
-    jdk 'JDK 17'
-    maven 'Maven_3.9.9'
-}
-
-
-
 
     environment {
-        JAVA_HOME = '/opt/java/openjdk'  // set your JDK path
-        PATH = "/usr/share/maven/bin:/opt/java/openjdk/bin:${env.PATH}"  // Maven + Java
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL = "127.0.0.1:8081"
@@ -20,43 +11,44 @@ pipeline {
         KUBECONFIG_ID = "kubeconfig"
     }
 
+    tools {
+        maven 'Maven 3.9.9'
+        jdk 'JDK 21'
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/hcharfeddine/tpFoyer.git'
             }
         }
-        
-        stage('Setup Tools') {
-    steps {
-        script {
-            def mvnHome = tool name: 'Maven_3.9.9', type: 'maven'
-            def javaHome = tool name: 'JDK 17', type: 'jdk'
-            env.JAVA_HOME = "${javaHome}"
-            env.PATH = "${mvnHome}/bin:${javaHome}/bin:${env.PATH}"
-        }
-    }
-}
 
         stage('Compile') {
             steps {
-                sh 'java -version'
-                sh 'mvn -version'
-                sh 'mvn clean compile'
+                script {
+                    def mavenHome = tool 'Maven 3.9.9'
+                    sh "${mavenHome}/bin/mvn clean compile"
+                }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
+                script {
+                    def mavenHome = tool 'Maven 3.9.9'
+                    withSonarQubeEnv('SonarQube') {
+                        sh "${mavenHome}/bin/mvn sonar:sonar"
+                    }
                 }
             }
         }
 
         stage('Package') {
             steps {
-                sh 'mvn package'
+                script {
+                    def mavenHome = tool 'Maven 3.9.9'
+                    sh "${mavenHome}/bin/mvn package"
+                }
             }
         }
 
