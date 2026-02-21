@@ -59,23 +59,20 @@ pipeline {
         }
 
         stage('Deploy to Nexus') {
-            steps {
-                script {
-                    nexusArtifactUploader(
-                        nexusVersion: NEXUS_VERSION,
-                        protocol: NEXUS_PROTOCOL,
-                        nexusUrl: NEXUS_URL,
-                        groupId: 'tn.esprit',
-                        version: '0.0.1-SNAPSHOT',
-                        repository: NEXUS_REPOSITORY,
-                        credentialsId: NEXUS_CREDENTIAL_ID,
-                        artifacts: [
-                            [artifactId: 'tpFoyer-17', classifier: '', file: 'target/tpFoyer-17-0.0.1-SNAPSHOT.jar', type: 'jar']
-                        ]
-                    )
-                }
-            }
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'nexus-credentials', 
+                                          usernameVariable: 'NEXUS_USER', 
+                                          passwordVariable: 'NEXUS_PASSWORD')]) {
+            sh """
+                mvn deploy \
+                -DaltDeploymentRepository=nexus-snapshots::default::http://127.0.0.1:8081/repository/maven-snapshots/ \
+                -Dusername=${NEXUS_USER} \
+                -Dpassword=${NEXUS_PASSWORD}
+            """
         }
+    }
+}
+
 
         stage('Docker Build') {
             steps {
