@@ -95,9 +95,8 @@ EOF
         stage('Docker Build') {
             steps {
                 script {
-                    // Utiliser les commandes shell Docker directement
                     sh """
-                        docker build -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        docker build -t ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE}:${env.DOCKER_TAG} .
                     """
                 }
             }
@@ -106,17 +105,25 @@ EOF
         stage('Docker Push') {
             steps {
                 script {
-                    // Pousser l'image vers le registre local
-                    sh """
-                        docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
-                    """
+                    // Utiliser les credentials Docker pour se connecter au registre local
+                    withCredentials([usernamePassword(
+                        credentialsId: "${env.DOCKER_CREDENTIALS_ID}",
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                            echo "\${DOCKER_PASS}" | docker login ${env.DOCKER_REGISTRY} -u "\${DOCKER_USER}" --password-stdin
+                            docker push ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE}:${env.DOCKER_TAG}
+                            docker logout ${env.DOCKER_REGISTRY}
+                        """
+                    }
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                withKubeConfig([credentialsId: KUBECONFIG_ID]) {
+                withKubeConfig([credentialsId: env.KUBECONFIG_ID]) {
                     sh 'kubectl apply -f k8s/deployment.yaml'
                     sh 'kubectl apply -f k8s/service.yaml'
                 }
