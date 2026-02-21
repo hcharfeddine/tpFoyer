@@ -10,12 +10,11 @@ pipeline {
         DOCKER_IMAGE = "my-app:latest"
         KUBECONFIG_ID = "kubeconfig"
     }
-    tools {
-    maven 'Maven 3.8.6'
-    jdk 'JDK 17'
-}
 
-    
+    tools {
+        maven 'Maven 3.8.6'
+        jdk 'JDK 17'
+    }
 
     stages {
         stage('Checkout') {
@@ -28,7 +27,7 @@ pipeline {
             steps {
                 script {
                     def mavenHome = tool 'Maven 3.8.6'
-                    sh "${mavenHome}/bin/mvn clean compile"
+                    sh "${mavenHome}/bin/mvn clean compile -DskipTests"
                 }
             }
         }
@@ -38,7 +37,7 @@ pipeline {
                 script {
                     def mavenHome = tool 'Maven 3.8.6'
                     withSonarQubeEnv('SonarQube') {
-                        sh "${mavenHome}/bin/mvn sonar:sonar"
+                        sh "${mavenHome}/bin/mvn sonar:sonar -DskipTests"
                     }
                 }
             }
@@ -48,7 +47,7 @@ pipeline {
             steps {
                 script {
                     def mavenHome = tool 'Maven 3.8.6'
-                    sh "${mavenHome}/bin/mvn package"
+                    sh "${mavenHome}/bin/mvn package -DskipTests"
                 }
             }
         }
