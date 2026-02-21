@@ -11,11 +11,6 @@ pipeline {
         KUBECONFIG_ID = "kubeconfig"
     }
 
-    tools {
-        maven 'Maven 3.8.6'
-        jdk 'JDK 17'
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -25,30 +20,21 @@ pipeline {
 
         stage('Compile') {
             steps {
-                script {
-                    def mavenHome = tool 'Maven 3.8.6'
-                    sh "${mavenHome}/bin/mvn clean compile"
-                }
+                sh 'mvn clean compile'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    def mavenHome = tool 'Maven 3.8.6'
-                    withSonarQubeEnv('SonarQube') {
-                        sh "${mavenHome}/bin/mvn sonar:sonar"
-                    }
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
 
         stage('Package') {
             steps {
-                script {
-                    def mavenHome = tool 'Maven 3.8.6'
-                    sh "${mavenHome}/bin/mvn package"
-                }
+                sh 'mvn package'
             }
         }
 
