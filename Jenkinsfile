@@ -2,11 +2,6 @@ pipeline {
     agent any
 
     environment {
-        NEXUS_VERSION = "nexus3"
-        NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "127.0.0.1:8081"
-        NEXUS_REPOSITORY = "maven-releases"
-        NEXUS_CREDENTIAL_ID = "nexus-credentials"
         DOCKER_IMAGE = "my-app:latest"
         KUBECONFIG_ID = "kubeconfig"
     }
@@ -21,7 +16,6 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    // Skip git checkout if the directory is already a git repo (like in Replit)
                     if (!fileExists('.git')) {
                         git branch: 'main', url: 'https://github.com/hcharfeddine/tpFoyer.git'
                     }
@@ -59,21 +53,44 @@ pipeline {
         }
 
         stage('Deploy to Nexus') {
-    steps {
-        withCredentials([usernamePassword(credentialsId: 'nexus-credentials')]) {
-            script {
-                def mavenHome = tool 'Maven 3.8.6'
-                sh """
-                    ${mavenHome}/bin/mvn deploy -DskipTests \
-                    -Dusername=${NEXUS_USER} \
-                    -Dpassword=${NEXUS_PASSWORD}
-                """
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'nexus-credentials', 
+                    usernameVariable: 'NEXUS_USERNAME', 
+                    passwordVariable: 'NEXUS_PASSWORD'
+                )]) {
+                    script {
+                        def mavenHome = tool 'Maven 3.8.6'
+                        
+                        // Créer le fichier settings.xml avec les credentials
+                        sh '''
+                            cat > settings.xml << 'EOF'
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <servers>
+        <server>
+            <id>nexus-snapshots</id>
+            <username>${NEXUS_USERNAME}</username>
+            <password>${NEXUS_PASSWORD}</password>
+        </server>
+        <server>
+            <id>nexus-releases</id>
+            <username>${NEXUS_USERNAME}</username>
+            <password>${NEXUS_PASSWORD}</password>
+        </server>
+    </servers>
+</settings>
+EOF
+                        '''
+                        
+                        // Déployer vers Nexus
+                        sh "${mavenHome}/bin/mvn deploy -DskipTests -s settings.xml"
+                    }
+                }
             }
         }
-    }
-}
-
-
 
         stage('Docker Build') {
             steps {
@@ -101,6 +118,5 @@ pipeline {
                 }
             }
         }
-
-    } 
-} 
+    }
+}
