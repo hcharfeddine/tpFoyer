@@ -65,15 +65,34 @@ pipeline {
                                           passwordVariable: 'admin')]) {
             script {
                 def mavenHome = tool 'Maven 3.8.6'
+                
                 sh """
-                    ${mavenHome}/bin/mvn deploy -DskipTests \
-                    -Dusername=${NEXUS_USER} \
-                    -Dpassword=${NEXUS_PASSWORD}
+                    cat > settings.xml << 'EOF'
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <servers>
+        <server>
+            <id>nexus-snapshots</id>
+            <username>${NEXUS_USER}</username>
+            <password>${NEXUS_PASSWORD}</password>
+        </server>
+        <server>
+            <id>nexus-releases</id>
+            <username>${NEXUS_USER}</username>
+            <password>${NEXUS_PASSWORD}</password>
+        </server>
+    </servers>
+</settings>
+EOF
+                    ${mavenHome}/bin/mvn deploy -DskipTests -s settings.xml
                 """
             }
         }
     }
 }
+
 
 
 
