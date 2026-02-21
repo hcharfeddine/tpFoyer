@@ -61,8 +61,8 @@ pipeline {
         stage('Deploy to Nexus') {
     steps {
         withCredentials([usernamePassword(credentialsId: 'nexus-credentials', 
-                                          usernameVariable: 'NEXUS_USER', 
-                                          passwordVariable: 'NEXUS_PASSWORD')]) {
+                                          usernameVariable: 'admin', 
+                                          passwordVariable: 'admin')]) {
             script {
                 def mavenHome = tool 'Maven 3.8.6'
                 sh """
