@@ -20,7 +20,12 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/hcharfeddine/tpFoyer.git'
+                script {
+                    // Skip git checkout if the directory is already a git repo (like in Replit)
+                    if (!fileExists('.git')) {
+                        git branch: 'main', url: 'https://github.com/hcharfeddine/tpFoyer.git'
+                    }
+                }
             }
         }
 
