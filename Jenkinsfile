@@ -63,15 +63,18 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'nexus-credentials', 
                                           usernameVariable: 'NEXUS_USER', 
                                           passwordVariable: 'NEXUS_PASSWORD')]) {
-            sh """
-                mvn deploy \
-                -DaltDeploymentRepository=nexus-snapshots::default::http://127.0.0.1:8081/repository/maven-snapshots/ \
-                -Dusername=${NEXUS_USER} \
-                -Dpassword=${NEXUS_PASSWORD}
-            """
+            script {
+                def mavenHome = tool 'Maven 3.8.6'
+                sh """
+                    ${mavenHome}/bin/mvn deploy -DskipTests \
+                    -Dusername=${NEXUS_USER} \
+                    -Dpassword=${NEXUS_PASSWORD}
+                """
+            }
         }
     }
 }
+
 
 
         stage('Docker Build') {
