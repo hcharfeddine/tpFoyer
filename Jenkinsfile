@@ -27,7 +27,7 @@ pipeline {
         stage('Compile') {
             steps {
                 script {
-                    def mavenHome = tool 'Maven 3.9.9'
+                    def mavenHome = tool 'Maven 3.8.6'
                     sh "${mavenHome}/bin/mvn clean compile"
                 }
             }
@@ -36,7 +36,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def mavenHome = tool 'Maven 3.9.9'
+                    def mavenHome = tool 'Maven 3.8.6'
                     withSonarQubeEnv('SonarQube') {
                         sh "${mavenHome}/bin/mvn sonar:sonar"
                     }
@@ -47,7 +47,7 @@ pipeline {
         stage('Package') {
             steps {
                 script {
-                    def mavenHome = tool 'Maven 3.9.9'
+                    def mavenHome = tool 'Maven 3.8.6'
                     sh "${mavenHome}/bin/mvn package"
                 }
             }
