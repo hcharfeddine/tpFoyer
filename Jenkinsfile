@@ -5,16 +5,7 @@ pipeline {
     maven 'Maven_3.9.9'
 }
 
-stage('Setup Tools') {
-    steps {
-        script {
-            def mvnHome = tool name: 'Maven_3.9.9', type: 'maven'
-            def javaHome = tool name: 'JDK 17', type: 'jdk'
-            env.JAVA_HOME = "${javaHome}"
-            env.PATH = "${mvnHome}/bin:${javaHome}/bin:${env.PATH}"
-        }
-    }
-}
+
 
 
     environment {
@@ -35,6 +26,17 @@ stage('Setup Tools') {
                 git branch: 'main', url: 'https://github.com/hcharfeddine/tpFoyer.git'
             }
         }
+        
+        stage('Setup Tools') {
+    steps {
+        script {
+            def mvnHome = tool name: 'Maven_3.9.9', type: 'maven'
+            def javaHome = tool name: 'JDK 17', type: 'jdk'
+            env.JAVA_HOME = "${javaHome}"
+            env.PATH = "${mvnHome}/bin:${javaHome}/bin:${env.PATH}"
+        }
+    }
+}
 
         stage('Compile') {
             steps {
