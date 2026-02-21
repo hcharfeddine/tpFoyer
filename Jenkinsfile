@@ -1,14 +1,10 @@
 pipeline {
     agent any
-    tools {
-        jdk 'JDK 17'
-        maven 'Maven 3.6.3'
-    }
 
     environment {
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "nexus:8081"
+        NEXUS_URL = "127.0.0.1:8081"
         NEXUS_REPOSITORY = "maven-releases"
         NEXUS_CREDENTIAL_ID = "nexus-credentials"
         DOCKER_IMAGE = "my-app:latest"
@@ -49,7 +45,7 @@ pipeline {
                         nexusVersion: NEXUS_VERSION,
                         protocol: NEXUS_PROTOCOL,
                         nexusUrl: NEXUS_URL,
-                        groupId: 'com.example',
+                        groupId: 'tn.esprit',
                         version: '0.0.1-SNAPSHOT',
                         repository: NEXUS_REPOSITORY,
                         credentialsId: NEXUS_CREDENTIAL_ID,
