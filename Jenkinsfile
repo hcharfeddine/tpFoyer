@@ -1,8 +1,8 @@
 pipeline {
     agent any
     tools {
-        jdk 'JDK 17'            
-        maven 'Maven_3.8.6'     
+        jdk 'JDK 17'
+        maven 'Maven_3.8.6'
     }
 
     environment {
@@ -22,17 +22,24 @@ pipeline {
             }
         }
 
-        stage('Compile') {
-    steps {
-        script {
-            def mvnHome = tool name: 'Maven_3.8.6', type: 'maven'
-            def javaHome = tool name: 'JDK 17', type: 'jdk'
-            env.PATH = "${mvnHome}/bin:${javaHome}/bin:${env.PATH}"
+        stage('Setup Tools') {
+            steps {
+                script {
+                    // Get the paths for Maven and JDK
+                    def mvnHome = tool name: 'Maven_3.8.6', type: 'maven'
+                    def javaHome = tool name: 'JDK 17', type: 'jdk'
+                    // Prepend to PATH so all sh steps can find mvn and java
+                    env.PATH = "${mvnHome}/bin:${javaHome}/bin:${env.PATH}"
+                }
+            }
         }
-        sh 'mvn -version'
-        sh 'mvn clean compile'
-    }
-}
+
+        stage('Compile') {
+            steps {
+                sh 'mvn -version'
+                sh 'mvn clean compile'
+            }
+        }
 
         stage('SonarQube Analysis') {
             steps {
