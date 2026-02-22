@@ -2,9 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "my-app:latest"
-        KUBECONFIG_ID = "kubeconfig"
-    }
+    DOCKER_IMAGE = "my-app"
+    DOCKER_TAG = "latest"
+    DOCKER_REGISTRY = "localhost:5000"
+    DOCKER_CREDENTIALS_ID = "docker-local-credentials"
+    KUBECONFIG_ID = "kubeconfig"
+}
+
 
     tools {
         maven 'Maven 3.8.6'
@@ -93,33 +97,34 @@ EOF
         }
 
         stage('Docker Build') {
-            steps {
-                script {
-                    sh """
-                        docker build -t ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE}:${env.DOCKER_TAG} .
-                    """
-                }
-            }
+    steps {
+        script {
+            sh """
+                docker build -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} .
+            """
         }
+    }
+}
+
 
         stage('Docker Push') {
-            steps {
-                script {
-                    // Utiliser les credentials Docker pour se connecter au registre local
-                    withCredentials([usernamePassword(
-                        credentialsId: "${env.DOCKER_CREDENTIALS_ID}",
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh """
-                            echo "\${DOCKER_PASS}" | docker login ${env.DOCKER_REGISTRY} -u "\${DOCKER_USER}" --password-stdin
-                            docker push ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE}:${env.DOCKER_TAG}
-                            docker logout ${env.DOCKER_REGISTRY}
-                        """
-                    }
-                }
+    steps {
+        script {
+            withCredentials([usernamePassword(
+                credentialsId: "${DOCKER_CREDENTIALS_ID}",
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
+                sh """
+                    echo "\${DOCKER_PASS}" | docker login ${DOCKER_REGISTRY} -u "\${DOCKER_USER}" --password-stdin
+                    docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                    docker logout ${DOCKER_REGISTRY}
+                """
             }
         }
+    }
+}
+
 
         stage('Deploy to Kubernetes') {
             steps {
