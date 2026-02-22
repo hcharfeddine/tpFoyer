@@ -5,7 +5,7 @@ pipeline {
     DOCKER_IMAGE = "my-app"
     DOCKER_TAG = "latest"
     DOCKER_REGISTRY = "localhost:5000"
-    DOCKER_CREDENTIALS_ID = "docker-local-credentials"
+    DOCKER_CREDENTIALS_ID = "docker-credentials"
     KUBECONFIG_ID = "kubeconfig"
 }
 
